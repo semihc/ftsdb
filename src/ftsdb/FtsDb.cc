@@ -18,9 +18,10 @@ namespace TC {
 // where the database is located, and a database name
 FtsDb::FtsDb(const QByteArray& homeDir,
              const QByteArray& dbFile,
-             const QByteArray& dbName) :
+             const QByteArray& dbName,
+             unsigned pagesize) :
     m_dbenv(0), m_db(0), m_mdb(0),
-    m_flags(0),
+    m_flags(0), m_pagesize(pagesize),
     m_homeDir(homeDir),
     m_dbFile(dbFile),
     m_dbName(dbName)
@@ -49,9 +50,13 @@ FtsDb::FtsDb(const QByteArray& homeDir,
 
     // If this is a secondary database, support
     // sorted duplicates
-    if (isSecondary)
+    if(isSecondary)
       m_db->set_flags(DB_DUPSORT);
 
+    // Set desired pagesize if set
+    if(m_pagesize > 0) 
+      m_db->set_pagesize(m_pagesize);
+    
     // Open the database
     m_db->open(0, m_dbFile.data(), m_dbName.data(), DB_BTREE, m_flags, 0644);
   }

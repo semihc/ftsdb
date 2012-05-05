@@ -25,7 +25,8 @@ public:
   // and a database name.
   FtsDb(const QByteArray& homeDir,
         const QByteArray& dbFile,
-        const QByteArray& dbName = "CATALOG");
+        const QByteArray& dbName = "CATALOG",
+        unsigned pagesize = 4096);
 
   ~FtsDb();
 
@@ -49,6 +50,9 @@ public:
   // MODIFIERS
   void close();
 
+  void setPageSize(unsigned ps)
+  { m_pagesize = ps; }
+
 private:
   // DB environment
   DbEnv* m_dbenv;
@@ -58,6 +62,7 @@ private:
   Db* m_mdb;
   // Flags for the database (u_int32_t)
   quint32 m_flags;
+  unsigned m_pagesize;
   // Location of DB files
   QByteArray m_homeDir;
   QByteArray m_dbFile;

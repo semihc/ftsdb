@@ -8,9 +8,6 @@
 #include <QMap>
 #include <QDir>
 #include <QStringList>
-#include <QQueue>
-#include <QMutex>
-#include <QWaitCondition>
 #include <db_cxx.h>
 
 using namespace std;
@@ -21,50 +18,7 @@ namespace {
 
 QSharedPointer<FtsDb> ftsdb;
 QAtomicInt recnt(0);
-QQueue<QByteArray> line_queue;
-QWaitCondition q_empty;
-QWaitCondition q_nonempty;
-QMutex q_mutex;
 
-/*
-struct InsTask : public QRunnable {
-
-  int m_id;
-  InsTask(int id) : m_id(id) {}
-
-  void run() {
-    QByteArray line;
-    while(true) {
-      try {
-        line.clear();
-        q_mutex.lock();
-        q_nonempty.wait(&q_mutex);
-        if(!line_queue.isEmpty())
-          line = line_queue.dequeue();
-        q_mutex.unlock();
-        if(line.isEmpty())
-          continue;
-        
-        Tokens_t tokens;
-        bool b = splitLine(line, tokens);
-        if(!b) {
-          qDebug() << "Cannot split line:" << line;
-          continue;
-        }
-        //TODO
-        qDebug() << m_id << line;
-      }
-      catch(DbException& e) {
-        qWarning() << e.what();
-      }
-      catch(exception& e) {
-        qWarning() << e.what();
-      }
-    }    
-  } // end of run()
-  
-};
-*/
 
 struct InsertTask : public QRunnable {
   // MEMBERS
@@ -79,7 +33,7 @@ struct InsertTask : public QRunnable {
 
   void run() {
     try {
-    QByteArray code = m_tokens.at(CodePos).trimmed();
+    QByteArray code = m_tokens.at(CodePos).trimmed().toLower();
     if(code.isEmpty()) {
       qWarning() << " Cannot determine code of the security";
       return;
@@ -143,7 +97,10 @@ int main(int argc, char** argv)
 
   if(!impFilter.isEmpty()) {
     impFilterList += impFilter;
-    impFileList += dir.entryList(impFilterList, QDir::Files);
+    QStringList el = dir.entryList(impFilterList, QDir::Files);
+    foreach(QString f, el) {
+      impFileList += dir.absoluteFilePath(f);
+    }
   }
 
   if(!impFile.isEmpty()) {
@@ -158,7 +115,7 @@ int main(int argc, char** argv)
   qDebug() << "import file list=" << impFileList;
   
   ftsdb = QSharedPointer<FtsDb>(new FtsDb(homeDir, dbFile));
-
+    
   foreach(impFile, impFileList) {
     qDebug() << "importing" << impFile;
     QList<QByteArray> lines, tokens;
@@ -174,13 +131,15 @@ int main(int argc, char** argv)
         qDebug() << "Cannot split line:" << line;
         continue;
       }
-      //1
+      //1: Parallel version
       InsertTask* it = new InsertTask(tokens, ftsdb->getDbEnv(), dbFile);
       recnt.fetchAndAddAcquire(1); // Increment;
       QThreadPool::globalInstance()->start(it);
-      //2
+      
+      //2: Serial version, deprecated
       // InsertTask it(tokens, ftsdb->getDbEnv(), dbFile);
       // it.run();
+
     } // foreach
 
 
@@ -190,6 +149,9 @@ int main(int argc, char** argv)
 
   if(!argsMap.value("stat").isEmpty()) {
     ftsdb->getDbEnv()->stat_print(DB_STAT_ALL);
+    u_int32_t pagesize;
+    ftsdb->getDb()->get_pagesize(&pagesize);
+    qDebug() << "DB page size=" << pagesize;
   }
 
   return ret;
