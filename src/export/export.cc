@@ -19,6 +19,7 @@ namespace {
 QSharedPointer<FtsDb> ftsdb;
 QAtomicInt recnt;
 
+#if 0
 struct InsertTask : public QRunnable {
   // MEMBERS
   Tokens_t m_tokens;
@@ -56,7 +57,7 @@ struct InsertTask : public QRunnable {
   }
   
 }; // end of struct
-
+#endif
 } // end of namespace
 
 int main(int argc, char** argv)
@@ -80,7 +81,7 @@ int main(int argc, char** argv)
   QByteArray dbFile = argsMap.value("dbfile","asx.db").toAscii();
   QString expFile = argsMap.value("export");
   QString expDate = argsMap.value("date");
-  QString expSec = argsMap.value("security");
+  QString expSec = argsMap.value("security"); 
   QString expSList = argsMap.contains("seclist") ? "1" : "";
 
   if(expFile.isEmpty()) {

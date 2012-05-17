@@ -38,6 +38,7 @@ FtsDb::FtsDb(const QByteArray& homeDir,
     m_dbenv->set_error_stream(&cerr);
     m_dbenv->set_message_stream(&cout);
     //m_dbenv->set_cachesize(0, 64 * 1024, 0);
+
     // Open the environment with full transactional support.
     m_dbenv->open(homeDir.data(),
                   DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN
@@ -56,6 +57,7 @@ FtsDb::FtsDb(const QByteArray& homeDir,
     // Set desired pagesize if set
     if(m_pagesize > 0) 
       m_db->set_pagesize(m_pagesize);
+
     
     // Open the database
     m_db->open(0, m_dbFile.data(), m_dbName.data(), DB_BTREE, m_flags, 0644);
@@ -105,5 +107,16 @@ void FtsDb::close()
   }
 }
 
-
 } // end namespace
+
+
+// Btree key comparison function
+int CompareInt(Db* db, const Dbt* a, const Dbt* b)
+{
+  int ai, bi;
+
+  memcpy(&ai, a->get_data(), sizeof(int));
+  memcpy(&bi, b->get_data(), sizeof(int));
+  return (ai - bi);
+}
+

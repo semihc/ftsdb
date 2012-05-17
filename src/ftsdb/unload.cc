@@ -16,10 +16,10 @@ int ShowAllDBNames(FtsDb& ftsdb, QStringList& slist)
 {
   Db db(ftsdb.getDbEnv(), 0);
   Dbc *cursorp;
-  
   try {
     db.open(0, ftsdb.getDbFile().data(), 0, DB_UNKNOWN, DB_RDONLY, 0);
-    Dbt key, data;
+    Dbt key;
+    Dbt data;
     int ret;
     db.cursor(NULL, &cursorp, 0);
     slist.clear();
@@ -47,14 +47,19 @@ int ShowAllRecordsBySecurity(const QByteArray& sec, FtsDb& ftsdb)
   Db db(ftsdb.getDbEnv(), 0);
   Dbc *cursorp;
   try {
+    db.set_bt_compare(CompareInt);
     db.open(0, ftsdb.getDbFile().data(), sec.data(), DB_BTREE,
             DB_RDONLY, 0);
     db.cursor(NULL, &cursorp, 0);
     // Iterate over the inventory database, from the first record
     // to the last, displaying each in turn
-    Dbt key, data;
+    int jval = 0; // julian day, initial value
+    Dbt key(&jval, sizeof(jval));
+    Dbt data;
     int ret;
-    while ((ret = cursorp->get(&key, &data, DB_NEXT)) == 0 )
+
+    ret = cursorp->get(&key, &data, DB_SET_RANGE);
+    while(ret == 0)
     {
       QByteArray k((const char*)key.get_data(), key.get_size());
       QByteArray d((const char*)data.get_data(), data.get_size());
@@ -62,6 +67,9 @@ int ShowAllRecordsBySecurity(const QByteArray& sec, FtsDb& ftsdb)
       int jday = *((int*)k.data());
       QDate date = QDate::fromJulianDay(jday);
       qDebug() << jday << date.toString() << d.size();
+
+      ret = cursorp->get(&key, &data, DB_NEXT);
+
     }
     qDebug() << "Dbc::get()=" << ret;
   } catch(DbException &e) {
@@ -102,6 +110,7 @@ int ShowAllRecordsByDate(const QDate& date, FtsDb& ftsdb)
     foreach(QString s, slist) {
       if(s.isEmpty()) continue;
       Db db(ftsdb.getDbEnv(), 0);
+      db.set_bt_compare(CompareInt);
       db.open(0, ftsdb.getDbFile().data(), s.toAscii().data(),
               DB_BTREE, DB_RDONLY|DB_THREAD, 0644);
       data.set_data(bfr);

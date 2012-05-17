@@ -12,6 +12,7 @@
 
 // FORWARDS
 class Db;
+class Dbt;
 class DbEnv;
 
 namespace TC {
@@ -77,5 +78,10 @@ private:
 };
 
 } // end namespace
+
+//! Btree key comparison function
+extern "C"
+int CompareInt(Db* db, const Dbt* a, const Dbt* b);
+
 
 #endif

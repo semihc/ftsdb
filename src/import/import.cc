@@ -42,6 +42,7 @@ struct InsertTask : public QRunnable {
     // m_dbFile.append(code.mid(0,1).toUpper());
     
     Db db(m_dbenv, 0);
+    db.set_bt_compare(CompareInt);
     db.open(0, m_dbFile.data(), code.data(), DB_BTREE,
             DB_CREATE|DB_THREAD, 0644);
     saveEODline(db, m_tokens);
