@@ -14,6 +14,7 @@ class QDate;
 namespace TC {
 
 int ShowAllDBNames(FtsDb& ftsdb, QStringList& slist);
+int ShowAllRecordsBySecSTL(const QByteArray& sec, FtsDb& db);
 int ShowAllRecordsBySecurity(const QByteArray& sec, FtsDb& db);
 int ShowAllRecordsByDate(const QDate& date, FtsDb& db);
 

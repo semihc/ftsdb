@@ -1,15 +1,40 @@
 
 #include "unload.hh"
 #include <QStringList>
+#include <QScopedPointer>
 #include <QDebug>
 #include <QDate>
 #include <db_cxx.h>
+#include <dbstl_map.h>
 
 using namespace std;
 using namespace TC;
+using namespace dbstl;
 
 
 namespace TC {
+
+typedef db_map<int, DbstlDbt > EodMap_t;
+
+
+//TODO: Problem with restore function:
+// How can we find out size of incoming bytestream?
+void QByteArrayRestore(QByteArray& dest, const void *srcdata)
+{
+  int srcsize = 1024;
+  dest.setRawData((const char*)srcdata, srcsize);
+}
+
+size_t QByteArraySize(const QByteArray& elem)
+{
+	return elem.size();
+}
+
+void QByteArrayCopy(void *dest, const QByteArray& elem)
+{
+	memcpy(dest, elem.data(), elem.size());
+}
+
 
 
 int ShowAllDBNames(FtsDb& ftsdb, QStringList& slist)
@@ -41,6 +66,40 @@ int ShowAllDBNames(FtsDb& ftsdb, QStringList& slist)
   return slist.size();
 }
 
+
+int ShowAllRecordsBySecSTL(const QByteArray& sec, FtsDb& ftsdb)
+{
+  QScopedPointer<DbEnv> dbenv(new DbEnv(DB_CXX_NO_EXCEPTIONS));
+  dbenv->set_error_stream(&cerr);
+  dbenv->set_message_stream(&cout);
+  dbenv->open(ftsdb.getHomeDir().data(),
+                DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN
+                | DB_THREAD | DB_CREATE, 0644);
+  QScopedPointer<Db> db(new Db(dbenv.data(), DB_CXX_NO_EXCEPTIONS));
+  db->set_error_stream(&cerr);
+   
+  try {
+    db->set_bt_compare(CompareInt);
+    db->open(0, ftsdb.getDbFile().data(), sec.data(), DB_BTREE,
+             DB_RDONLY, 0);
+
+    EodMap_t dbmap(db.data(), dbenv.data());
+    EodMap_t::iterator itr;
+
+    for(itr = dbmap.begin(); itr != dbmap.end(); ++itr) {
+      QByteArray d((const char*)itr->second.get_data(),
+                   itr->second.get_size());
+      int jday = itr->first;
+      QDate date = QDate::fromJulianDay(jday);
+      qDebug() << jday << date.toString() << d.size();
+    }
+
+  } catch(DbException& e) {
+    db->err(e.get_errno(), "Error in ShowAllRecordsBySecSTL");
+  }
+  
+  return 0;
+}
 
 int ShowAllRecordsBySecurity(const QByteArray& sec, FtsDb& ftsdb)
 {

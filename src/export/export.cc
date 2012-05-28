@@ -2,9 +2,7 @@
 #include <QByteArray>
 #include <QDebug>
 #include <QSharedPointer>
-#include <QThreadPool>
 #include <QCoreApplication>
-#include <QAtomicInt>
 #include <QMap>
 #include <QDate>
 #include <QStringList>
@@ -17,47 +15,7 @@ using namespace TC;
 namespace {
 
 QSharedPointer<FtsDb> ftsdb;
-QAtomicInt recnt;
 
-#if 0
-struct InsertTask : public QRunnable {
-  // MEMBERS
-  Tokens_t m_tokens;
-  DbEnv* m_dbenv;
-  QByteArray m_dbFile;
-
-  // CREATORS
-  InsertTask(const Tokens_t& tokens, DbEnv* dbenv,
-             const QByteArray& dbFile)
-      : m_tokens(tokens), m_dbenv(dbenv), m_dbFile(dbFile) {}
-
-  void run() {
-    try {
-    QByteArray code = m_tokens.at(CodePos).trimmed();
-    if(code.isEmpty()) {
-      qWarning() << " Cannot determine code of the security";
-      return;
-    }
-
-    // m_dbFile.append(code.mid(0,1).toUpper());
-    
-    Db db(m_dbenv, 0);
-    db.open(0, m_dbFile.data(), code.data(), DB_BTREE,
-            DB_CREATE|DB_THREAD, 0644);
-    saveEODline(db, m_tokens);
-    db.close(0);
-    int rval = recnt.fetchAndAddAcquire(-1); // Decrement;
-    // Are we the last task?
-    if(rval==1) // Value before the decrement
-      QCoreApplication::quit();
-    }
-    catch(DbException& e) {
-      cerr << e.what() << endl;
-    }
-  }
-  
-}; // end of struct
-#endif
 } // end of namespace
 
 int main(int argc, char** argv)
@@ -100,7 +58,8 @@ int main(int argc, char** argv)
   }
 
   if(!expSec.isEmpty()) {
-    ret = ShowAllRecordsBySecurity(expSec.toAscii(), *ftsdb);
+    //ret = ShowAllRecordsBySecurity(expSec.toAscii(), *ftsdb); 
+    ret = ShowAllRecordsBySecSTL(expSec.toAscii(), *ftsdb);
     return ret;
   }
 
