@@ -12,7 +12,7 @@ LIBS += -L$$(QDECIMAL)/lib -lqdecimal -ldecnumber
 
 
 win32 {
- LIBS += $$PRJ_BDB_LIB/libdb53d.lib
+ LIBS += $$PRJ_BDB_LIB/libdb_stl53d.lib $$PRJ_BDB_LIB/libdb53d.lib
  SOURCES += $$PRJ_BDB_SRC/clib/getopt.c
  DEFINES -= UNICODE
 }

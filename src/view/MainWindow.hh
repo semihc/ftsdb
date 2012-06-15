@@ -2,6 +2,10 @@
 #define MAINWINDOW_HH
 
 #include <QMainWindow>
+#include <QSharedPointer>
+#include <QAbstractItemModel>
+#include <QAbstractItemView>
+#include "FtsDb.hh"
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -17,6 +21,7 @@ class MainWindow : public QMainWindow
  public:
   MainWindow();
   MainWindow(const QString &fileName);
+  virtual ~MainWindow();
 
  protected:
   void closeEvent(QCloseEvent *event);
@@ -28,6 +33,7 @@ class MainWindow : public QMainWindow
   bool saveAs();
   void about();
   void documentWasModified();
+  void dbList();
 
  private:
   void init();
@@ -64,9 +70,13 @@ class MainWindow : public QMainWindow
   QAction *cutAct;
   QAction *copyAct;
   QAction *pasteAct;
+  QAction *dbListAct;
   QAction *aboutAct;
   QAction *aboutQtAct;
-  
+
+  QAbstractItemModel* m_dbModel;
+  QAbstractItemView* m_dbView;
+  QSharedPointer<TC::FtsDb> m_ftsdb;
 };
 
 #endif

@@ -1,7 +1,12 @@
 
+#include "MainWindow.hh"
 #include <QtGui>
 #include <QDockWidget>
-#include "MainWindow.hh"
+#include <QStringListModel>
+#include "unload.hh"
+
+using namespace TC;
+
 
 MainWindow::MainWindow()
 {
@@ -15,14 +20,18 @@ MainWindow::MainWindow(const QString &fileName)
     loadFile(fileName);
 }
 
+MainWindow::~MainWindow()
+{
+}
+
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    if (maybeSave()) {
-        writeSettings();
-        event->accept();
-    } else {
-        event->ignore();
-    }
+  if (maybeSave()) {
+    writeSettings();
+    event->accept();
+  } else {
+    event->ignore();
+  }
 }
 
 void MainWindow::newFile()
@@ -34,38 +43,38 @@ void MainWindow::newFile()
 
 void MainWindow::open()
 {
-    QString fileName = QFileDialog::getOpenFileName(this);
-    if (!fileName.isEmpty()) {
-        MainWindow *existing = findMainWindow(fileName);
-        if (existing) {
-            existing->show();
-            existing->raise();
-            existing->activateWindow();
-            return;
-        }
-
-        if (isUntitled && textEdit->document()->isEmpty()
-                && !isWindowModified()) {
-            loadFile(fileName);
-        } else {
-            MainWindow *other = new MainWindow(fileName);
-            if (other->isUntitled) {
-                delete other;
-                return;
-            }
-            other->move(x() + 40, y() + 40);
-            other->show();
-        }
+  QString fileName = QFileDialog::getOpenFileName(this);
+  if (!fileName.isEmpty()) {
+    MainWindow *existing = findMainWindow(fileName);
+    if (existing) {
+      existing->show();
+      existing->raise();
+      existing->activateWindow();
+      return;
     }
+
+    if (isUntitled && textEdit->document()->isEmpty()
+        && !isWindowModified()) {
+      loadFile(fileName);
+    } else {
+      MainWindow *other = new MainWindow(fileName);
+      if (other->isUntitled) {
+        delete other;
+        return;
+      }
+      other->move(x() + 40, y() + 40);
+      other->show();
+    }
+  }
 }
 
 bool MainWindow::save()
 {
-    if (isUntitled) {
-        return saveAs();
-    } else {
-        return saveFile(curFile);
-    }
+  if (isUntitled) {
+    return saveAs();
+  } else {
+    return saveFile(curFile);
+  }
 }
 
 bool MainWindow::saveAs()
@@ -91,6 +100,18 @@ void MainWindow::documentWasModified()
     setWindowModified(true);
 }
 
+
+void MainWindow::dbList()
+{
+  QStringList dblist;
+  ShowAllDBNames(*m_ftsdb, dblist); 
+
+  m_dbModel = new QStringListModel(dblist);
+  m_dbView = new QListView;
+  m_dbView->setModel(m_dbModel);
+  m_dbView->show();
+}
+
 void MainWindow::init()
 {
     setAttribute(Qt::WA_DeleteOnClose);
@@ -112,6 +133,10 @@ void MainWindow::init()
             this, SLOT(documentWasModified()));
 
     setUnifiedTitleAndToolBarOnMac(true);
+
+    QByteArray homeDir("ASX");
+    QByteArray dbFile("asx.db");
+    m_ftsdb = QSharedPointer<FtsDb>(new FtsDb(homeDir, dbFile));
 }
 
 void MainWindow::createDocks()
@@ -185,6 +210,11 @@ void MainWindow::createActions()
     connect(aboutQtAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 
 
+    dbListAct = new QAction(tr("List DBs"), this);
+    dbListAct->setStatusTip(tr("List all available databases"));
+    connect(dbListAct, SIGNAL(triggered()), this, SLOT(dbList()));
+
+
     cutAct->setEnabled(false);
     copyAct->setEnabled(false);
     connect(textEdit, SIGNAL(copyAvailable(bool)),
@@ -200,6 +230,7 @@ void MainWindow::createMenus()
     fileMenu->addAction(openAct);
     fileMenu->addAction(saveAct);
     fileMenu->addAction(saveAsAct);
+    fileMenu->addAction(dbListAct);
     fileMenu->addSeparator();
     fileMenu->addAction(closeAct);
     fileMenu->addAction(exitAct);
