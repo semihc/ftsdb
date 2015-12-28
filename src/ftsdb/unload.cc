@@ -170,7 +170,7 @@ int ShowAllRecordsByDate(const QDate& date, FtsDb& ftsdb)
       if(s.isEmpty()) continue;
       Db db(ftsdb.getDbEnv(), 0);
       db.set_bt_compare(CompareInt);
-      db.open(0, ftsdb.getDbFile().data(), s.toAscii().data(),
+      db.open(0, ftsdb.getDbFile().data(), s.toLatin1().data(),
               DB_BTREE, DB_RDONLY|DB_THREAD, 0644);
       data.set_data(bfr);
       data.set_ulen(BfrMax);

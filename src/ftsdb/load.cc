@@ -25,7 +25,7 @@ bool readFile(const QString& fn, Lines_t& lines)
 {
   QFile file(fn);
   if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-    cerr << "Could not open file " << fn.toAscii().data();
+    cerr << "Could not open file " << fn.toLatin1().data();
     return false;
   }
 

@@ -35,8 +35,8 @@ int main(int argc, char** argv)
     }
   }
 
-  QByteArray homeDir = argsMap.value("exchange","ASX").toAscii();
-  QByteArray dbFile = argsMap.value("dbfile","asx.db").toAscii();
+  QByteArray homeDir = argsMap.value("exchange","ASX").toLatin1();
+  QByteArray dbFile = argsMap.value("dbfile","asx.db").toLatin1();
   QString expFile = argsMap.value("export");
   QString expDate = argsMap.value("date");
   QString expSec = argsMap.value("security"); 
@@ -58,8 +58,8 @@ int main(int argc, char** argv)
   }
 
   if(!expSec.isEmpty()) {
-    //ret = ShowAllRecordsBySecurity(expSec.toAscii(), *ftsdb); 
-    ret = ShowAllRecordsBySecSTL(expSec.toAscii(), *ftsdb);
+    //ret = ShowAllRecordsBySecurity(expSec.toLatin1(), *ftsdb); 
+    ret = ShowAllRecordsBySecSTL(expSec.toLatin1(), *ftsdb);
     return ret;
   }
 

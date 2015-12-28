@@ -45,6 +45,7 @@ contains(QMK_COMP,Sunpro) {
 #
 win32 {
 	PRJ_CONFIG += console
+  DEFINES *= _VARIADIC_MAX=10
 }
 
 unix {

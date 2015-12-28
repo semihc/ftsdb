@@ -1,8 +1,9 @@
 
 #include "MainWindow.hh"
-#include <QtGui>
+#include <QtWidgets>
 #include <QDockWidget>
 #include <QStringListModel>
+#include <QFileDialog>
 #include "unload.hh"
 
 using namespace TC;

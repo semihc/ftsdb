@@ -81,8 +81,8 @@ int main(int argc, char** argv)
     }
   }
 
-  QByteArray homeDir = argsMap.value("exchange","ASX").toAscii();
-  QByteArray dbFile = argsMap.value("dbfile","asx.db").toAscii();
+  QByteArray homeDir = argsMap.value("exchange","ASX").toLatin1();
+  QByteArray dbFile = argsMap.value("dbfile","asx.db").toLatin1();
   QString impFile = argsMap.value("import-file");
   QString impDir = argsMap.value("import-dir");
   QString impFilter = argsMap.value("import-filter");

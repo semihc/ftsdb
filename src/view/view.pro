@@ -1,5 +1,6 @@
 include( $$(QMKBLD)/root.pri )
 
+QT += widgets
 TEMPLATE = app
 TARGET = ftsdb_view
 DESTDIR = $$PRJ_BIN
